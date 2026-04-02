@@ -1,0 +1,6 @@
+flask
+requests
+supabase
+python-dotenv
+groq
+flask-cors

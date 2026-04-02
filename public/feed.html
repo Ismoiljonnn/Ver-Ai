@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VerAi — Ommaviy Feed</title>
+  <link rel="icon" type="image/png" href="VerAi.png">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root[data-theme="dark"] {
+      --bg: #0d0d0d; --surface: #161616; --surface2: #1f1f1f;
+      --border: #2a2a2a; --text: #f0ede6; --muted: #888;
+      --accent: #1C9AFD; --accent-dark: #1482D9;
+      --fake: #ff5c5c; --suspicious: #ffb347; --real: #5cffa0;
+      --card-bg: rgba(22,22,22,0.88);
+    }
+    :root[data-theme="light"] {
+      --bg: #f2f2f0; --surface: #ffffff; --surface2: #ebebeb;
+      --border: #d8d8d8; --text: #111111; --muted: #777;
+      --accent: #1282d8; --accent-dark: #0e6db8;
+      --fake: #cc2222; --suspicious: #b06000; --real: #0a8a40;
+      --card-bg: rgba(255,255,255,0.92);
+    }
+
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; padding: 2rem 1.5rem 3rem;
+      transition: background 0.3s, color 0.3s;
+      overflow-x: hidden;
+    }
+    @media (max-width:600px) { body { padding: 1.5rem 1rem 2rem; } }
+
+    /* ── Orbs ── */
+    .bg-orbs { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.22; animation: float 14s ease-in-out infinite alternate; }
+    .orb-1 { width: 420px; height: 420px; background: #1C9AFD; top: -12%; left: -8%; animation-delay: 0s; }
+    .orb-2 { width: 300px; height: 300px; background: #7c3aed; bottom: -10%; right: -8%; animation-delay: -5s; }
+    .orb-3 { width: 220px; height: 220px; background: #06b6d4; top: 55%; left: 65%; animation-delay: -9s; }
+    @keyframes float { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(35px,-28px) scale(1.12)} }
+    :root[data-theme="light"] .orb { opacity: 0.1; }
+
+    /* ── Fixed buttons ── */
+    .back-btn {
+      position: fixed; top: 18px; left: 18px; z-index: 100;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; width: 42px; height: 42px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s; text-decoration: none;
+    }
+    .back-btn:hover { background: var(--surface2); border-color: var(--accent); }
+    .back-btn svg { width: 18px; height: 18px; stroke: var(--text); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    .theme-toggle {
+      position: fixed; top: 18px; right: 18px; z-index: 100;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; width: 42px; height: 42px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s; border: none; outline: none;
+    }
+    .theme-toggle:hover { background: var(--surface2); border: 1px solid var(--accent); }
+    .theme-toggle svg { width: 18px; height: 18px; stroke: var(--text); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ── Page container ── */
+    .feed-container {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 700px;
+      animation: slideUp 0.65s cubic-bezier(0.16,1,0.3,1) both;
+      padding-top: 3.5rem;
+    }
+    @keyframes slideUp {
+      from { opacity:0; transform:translateY(24px) scale(0.98); }
+      to   { opacity:1; transform:translateY(0) scale(1); }
+    }
+
+    /* ── Page header ── */
+    .feed-page-header { text-align: center; margin-bottom: 2rem; }
+    .logo-badge {
+      display: inline-block; background: var(--accent); color: #fff;
+      font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      padding: 4px 14px; border-radius: 99px; margin-bottom: 1rem;
+    }
+    .feed-page-header h1 {
+      font-family: 'Syne', sans-serif; font-size: clamp(1.6rem, 5vw, 2.4rem);
+      font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem;
+    }
+    .feed-page-header h1 span { color: var(--accent); }
+    .feed-page-header p { color: var(--muted); font-size: 14px; line-height: 1.5; max-width: 420px; margin: 0 auto; }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+      margin-bottom: 1.4rem;
+    }
+    @media (max-width:400px) { .stats-row { gap: 7px; } }
+
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 16px;
+      text-align: center; transition: background 0.3s;
+    }
+    .stat-val {
+      font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800;
+      line-height: 1; margin-bottom: 4px; transition: color 0.3s;
+    }
+    .stat-val.red   { color: var(--fake); }
+    .stat-val.amber { color: var(--suspicious); }
+    .stat-val.green { color: var(--real); }
+    .stat-lbl {
+      font-size: 10px; color: var(--muted);
+      font-family: 'Syne', sans-serif; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+
+    /* ── Feed card wrapper ── */
+    .feed-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border); border-radius: 20px; padding: 1.5rem;
+      transition: background 0.3s, border-color 0.3s;
+    }
+    @media (max-width:600px) { .feed-card { padding: 1.1rem; border-radius: 16px; } }
+
+    /* ── Feed header inside card ── */
+    .feed-inner-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1rem; flex-wrap: wrap; gap: 10px;
+    }
+    .feed-live-row { display: flex; align-items: center; gap: 8px; }
+    .live-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+      animation: livepulse 1.5s infinite;
+    }
+    @keyframes livepulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.65)} }
+    .feed-live-label {
+      font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700;
+      letter-spacing: 0.13em; text-transform: uppercase; color: var(--muted);
+    }
+    .feed-total-badge {
+      font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+      color: var(--accent); background: rgba(28,154,253,0.1);
+      border: 1px solid rgba(28,154,253,0.2); padding: 3px 10px; border-radius: 99px;
+    }
+
+    /* ── Filters ── */
+    .feed-filters {
+      display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap;
+    }
+    .filter-btn {
+      font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+      padding: 5px 13px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface2); color: var(--muted); cursor: pointer;
+      transition: all 0.18s; letter-spacing: 0.04em;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ── New items notification ── */
+    .new-notif {
+      display: none; width: 100%; margin-bottom: 8px;
+      background: rgba(28,154,253,0.08); border: 1px solid rgba(28,154,253,0.2);
+      border-radius: 10px; padding: 9px 14px;
+      font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+      color: var(--accent); cursor: pointer; text-align: center;
+      transition: all 0.2s; letter-spacing: 0.04em;
+    }
+    .new-notif.visible { display: block; }
+    .new-notif:hover { background: rgba(28,154,253,0.14); }
+
+    /* ── Feed list ── */
+    .feed-list { display: flex; flex-direction: column; gap: 8px; }
+
+    /* ── Feed item ── */
+    .feed-item {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 13px 15px;
+      display: flex; align-items: center; gap: 13px;
+      transition: border-color 0.2s;
+      animation: itemIn 0.38s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .feed-item:hover { border-color: rgba(28,154,253,0.35); }
+    .feed-item.fresh { border-color: rgba(28,154,253,0.3); }
+    @keyframes itemIn { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+
+    .item-dot {
+      width: 38px; height: 38px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 800;
+    }
+    .dot-fake  { background: rgba(255,92,92,0.14);  color: var(--fake); }
+    .dot-sus   { background: rgba(255,179,71,0.14); color: var(--suspicious); }
+    .dot-real  { background: rgba(92,255,160,0.14); color: var(--real); }
+
+    .item-body { flex: 1; min-width: 0; }
+    .item-text {
+      font-size: 13px; color: var(--text); line-height: 1.4;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 5px; font-weight: 500;
+    }
+    .item-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .item-pill {
+      font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 6px; letter-spacing: 0.05em;
+    }
+    .pill-fake  { background: rgba(255,92,92,0.12);  color: var(--fake); }
+    .pill-sus   { background: rgba(255,179,71,0.12); color: var(--suspicious); }
+    .pill-real  { background: rgba(92,255,160,0.12); color: var(--real); }
+    .item-pct { font-size: 11px; color: var(--muted); font-weight: 600; }
+    .item-time { font-size: 11px; color: var(--border); margin-left: auto; white-space: nowrap; }
+    :root[data-theme="light"] .item-time { color: #bbb; }
+
+    /* ── Empty state ── */
+    .feed-empty {
+      text-align: center; padding: 3rem 1rem; color: var(--muted); font-size: 14px;
+    }
+    .feed-empty svg { width: 40px; height: 40px; stroke: var(--border); fill: none; margin-bottom: 12px; }
+
+    /* ── Footer inside card ── */
+    .feed-card-footer {
+      margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    }
+    .feed-today { font-size: 11px; color: var(--muted); }
+    .feed-today b { color: var(--text); }
+    .analyze-link {
+      font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+      color: var(--accent); text-decoration: none; letter-spacing: 0.04em;
+      display: flex; align-items: center; gap: 4px;
+      padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(28,154,253,0.25);
+      background: rgba(28,154,253,0.06); transition: all 0.18s;
+    }
+    .analyze-link:hover { background: rgba(28,154,253,0.12); border-color: var(--accent); }
+    .analyze-link svg { width: 12px; height: 12px; stroke: currentColor; fill: none; }
+
+    /* ── Page footer ── */
+    .page-footer {
+      margin-top: 2rem; color: var(--muted); font-size: 12px;
+      text-align: center; opacity: 0.45; position: relative; z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-orbs">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<a class="back-btn" href="/" aria-label="Orqaga">
+  <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+</a>
+
+<button class="theme-toggle" onclick="toggleTheme()" aria-label="Tema">
+  <svg id="themeIcon" viewBox="0 0 24 24">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+</button>
+
+<div class="feed-container">
+
+  <!-- Page header -->
+  <div class="feed-page-header">
+    <div class="logo-badge">VerAi</div>
+    <h1>Ommaviy <span>Feed</span></h1>
+    <p>Foydalanuvchilar hozir nima tekshirayotgani — real vaqtda</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-val red" id="cntFake">0</div>
+      <div class="stat-lbl">Soxta</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val amber" id="cntSus">0</div>
+      <div class="stat-lbl">Shubhali</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val green" id="cntReal">0</div>
+      <div class="stat-lbl">Haqiqiy</div>
+    </div>
+  </div>
+
+  <!-- Feed card -->
+  <div class="feed-card">
+
+    <div class="feed-inner-header">
+      <div class="feed-live-row">
+        <div class="live-dot"></div>
+        <span class="feed-live-label">Jonli — hozir tekshirilmoqda</span>
+      </div>
+      <span class="feed-total-badge" id="totalBadge">0 ta</span>
+    </div>
+
+    <div class="feed-filters">
+      <button class="filter-btn active" onclick="setFilter('all',this)">Hammasi</button>
+      <button class="filter-btn" onclick="setFilter('FAKE',this)">Soxta</button>
+      <button class="filter-btn" onclick="setFilter('SUS',this)">Shubhali</button>
+      <button class="filter-btn" onclick="setFilter('REAL',this)">Haqiqiy</button>
+    </div>
+
+    <div class="new-notif" id="newNotif" onclick="flushPending()"></div>
+
+    <div class="feed-list" id="feedList">
+      <div class="feed-empty">
+        <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <p>Yuklanmoqda...</p>
+      </div>
+    </div>
+
+    <div class="feed-card-footer">
+      <span class="feed-today">Bugun: <b id="todayCount">0</b> ta tekshirildi</span>
+      <a href="/" class="analyze-link">
+        Tahlil qilish
+        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"/>
+          <polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<p class="page-footer">VerAi &mdash; Since 2026</p>
+
+<script>
+  // ════════════════════════════════════════════════
+  // THEME
+  // ════════════════════════════════════════════════
+  let isDark = localStorage.getItem('verai_theme') !== 'light';
+
+  function applyTheme() {
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    document.getElementById('themeIcon').innerHTML = isDark
+      ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
+      : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  }
+  function toggleTheme() {
+    isDark = !isDark;
+    localStorage.setItem('verai_theme', isDark ? 'dark' : 'light');
+    applyTheme();
+  }
+
+  // ════════════════════════════════════════════════
+  // SEED DATA — 20 ta tayyor natija
+  // ════════════════════════════════════════════════
+  const SEED = [
+    { text: "Toshkentda 7 ball zilzila bo'ldi", verdict:'FAKE', pct:92, min:1 },
+    { text: "O'zbekiston GDP 2024-yilda 6.5% o'sdi", verdict:'REAL', pct:94, min:2 },
+    { text: "Yangi qonun: barcha xizmat bepul bo'ladi", verdict:'FAKE', pct:88, min:4 },
+    { text: "Dollar kursi 12 950 so'mga tushdi", verdict:'SUS', pct:54, min:6 },
+    { text: "Prezident Samarqandga tashrif buyurdi", verdict:'REAL', pct:97, min:8 },
+    { text: "Yevro kupyuralar o'zgaradi, almashtiring", verdict:'FAKE', pct:85, min:11 },
+    { text: "O'zbekistonda benzin narxi oshdi", verdict:'SUS', pct:61, min:14 },
+    { text: "Toshkent metrosida yangi bekat ochildi", verdict:'REAL', pct:91, min:17 },
+    { text: "ChatGPT O'zbekistonda taqiqlandi", verdict:'FAKE', pct:79, min:20 },
+    { text: "Ishsizlik darajasi 7.5 millionga yetdi", verdict:'SUS', pct:50, min:24 },
+    { text: "Andijon viloyatida yangi korxona quriladi", verdict:'REAL', pct:88, min:28 },
+    { text: "Telegram O'zbekistonda bloklandi", verdict:'FAKE', pct:96, min:32 },
+    { text: "Maktablarda yoz ta'tili uzaytirildi", verdict:'SUS', pct:58, min:36 },
+    { text: "O'zbekiston Olimpiadada 3 ta oltin medal oldi", verdict:'REAL', pct:99, min:40 },
+    { text: "Barcha banklar ertaga yopiladi", verdict:'FAKE', pct:90, min:45 },
+    { text: "Aviabiletlar narxi 30% arzonlashdi", verdict:'SUS', pct:52, min:50 },
+    { text: "Toshkent xalqaro aeroporti kengaytiriladi", verdict:'REAL', pct:93, min:55 },
+    { text: "Yangi valyuta — digital so'm joriy etiladi", verdict:'SUS', pct:48, min:61 },
+    { text: "O'zbekistonda COVID-19 qayta tarqalmoqda", verdict:'FAKE', pct:82, min:68 },
+    { text: "Samarqand UNESCOning yangi ro'yxatiga kirdi", verdict:'REAL', pct:96, min:75 },
+  ];
+
+  // Yangi kelish uchun navbatdagi xabarlar
+  const INCOMING = [
+    { text: "Toshkentda bepul WiFi tarqatiladi", verdict:'SUS', pct:55 },
+    { text: "Xitoydan yangi temir yo'l yo'nalishi ochildi", verdict:'REAL', pct:89 },
+    { text: "Gaz narxi 3 barobarga oshdi", verdict:'FAKE', pct:87 },
+    { text: "Yangi ta'lim islohoti qabul qilindi", verdict:'REAL', pct:91 },
+    { text: "Toshkentda yana bir ko'priк quriladi", verdict:'SUS', pct:63 },
+    { text: "Barcha avtomobillar ro'yxatga olinadi", verdict:'FAKE', pct:76 },
+  ];
+
+  // ════════════════════════════════════════════════
+  // STATE
+  // ════════════════════════════════════════════════
+  let displayed  = [];
+  let pending    = [];
+  let currentFilter = 'all';
+  let incomingIdx   = 0;
+  const counters    = { FAKE:0, SUS:0, REAL:0 };
+
+  // ════════════════════════════════════════════════
+  // HELPERS
+  // ════════════════════════════════════════════════
+  function fmtTime(min) {
+    if (min < 60) return min + ' daqiqa oldin';
+    return Math.floor(min/60) + ' soat oldin';
+  }
+
+  function verdictCfg(v) {
+    if (v === 'FAKE') return { dotCls:'dot-fake',  pillCls:'pill-fake',  label:'SOXTA',    short:'S' };
+    if (v === 'SUS')  return { dotCls:'dot-sus',   pillCls:'pill-sus',   label:'SHUBHALI', short:'?' };
+    return                   { dotCls:'dot-real',  pillCls:'pill-real',  label:'HAQIQIY',  short:'H' };
+  }
+
+  function makeItemEl(item, fresh = false) {
+    const c   = verdictCfg(item.verdict);
+    const div = document.createElement('div');
+    div.className = 'feed-item' + (fresh ? ' fresh' : '');
+    div.innerHTML = `
+      <div class="item-dot ${c.dotCls}">${c.short}</div>
+      <div class="item-body">
+        <div class="item-text" title="${item.text}">${item.text}</div>
+        <div class="item-meta">
+          <span class="item-pill ${c.pillCls}">${c.label}</span>
+          <span class="item-pct">${item.pct}% ishonch</span>
+          <span class="item-time">${fmtTime(item.min ?? 0)}</span>
+        </div>
+      </div>`;
+    return div;
+  }
+
+  // ════════════════════════════════════════════════
+  // RENDER
+  // ════════════════════════════════════════════════
+  function rebuildList() {
+    const list = document.getElementById('feedList');
+    const data = currentFilter === 'all'
+      ? displayed
+      : displayed.filter(i => i.verdict === currentFilter);
+
+    if (data.length === 0) {
+      list.innerHTML = `<div class="feed-empty">
+        <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <p>Bu filtrda natija yo'q</p>
+      </div>`;
+      return;
+    }
+    list.innerHTML = '';
+    data.forEach(item => list.appendChild(makeItemEl(item)));
+  }
+
+  function updateCounters() {
+    animCount('cntFake',  counters.FAKE);
+    animCount('cntSus',   counters.SUS);
+    animCount('cntReal',  counters.REAL);
+    const total = counters.FAKE + counters.SUS + counters.REAL;
+    document.getElementById('totalBadge').textContent  = total + ' ta';
+    document.getElementById('todayCount').textContent  = total;
+  }
+
+  function animCount(id, target) {
+    const el   = document.getElementById(id);
+    const from = parseInt(el.textContent) || 0;
+    if (from === target) return;
+    const dur  = 500; const t0 = performance.now();
+    const tick = now => {
+      const p = Math.min((now - t0) / dur, 1);
+      const ease = p < .5 ? 2*p*p : -1+(4-2*p)*p;
+      el.textContent = Math.round(from + (target - from) * ease);
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  // ════════════════════════════════════════════════
+  // FILTER
+  // ════════════════════════════════════════════════
+  function setFilter(f, btn) {
+    currentFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    rebuildList();
+  }
+
+  // ════════════════════════════════════════════════
+  // PENDING / NOTIFICATION
+  // ════════════════════════════════════════════════
+  function flushPending() {
+    if (!pending.length) return;
+    pending.forEach(item => {
+      displayed.unshift(item);
+      counters[item.verdict]++;
+    });
+    pending = [];
+    document.getElementById('newNotif').classList.remove('visible');
+    rebuildList();
+    updateCounters();
+
+    // Fresh highlight on top items
+    const items = document.querySelectorAll('.feed-item');
+    for (let i = 0; i < Math.min(3, items.length); i++) {
+      items[i].classList.add('fresh');
+      setTimeout(() => items[i]?.classList.remove('fresh'), 3000);
+    }
+  }
+
+  function addPending(item) {
+    pending.push(item);
+    const notif = document.getElementById('newNotif');
+    notif.textContent = `▲  ${pending.length} ta yangi xabar — ko'rish uchun bosing`;
+    notif.classList.add('visible');
+  }
+
+  // ════════════════════════════════════════════════
+  // INIT — seed data yuklash
+  // ════════════════════════════════════════════════
+  function init() {
+    SEED.forEach(item => {
+      displayed.push({ ...item });
+      counters[item.verdict]++;
+    });
+    rebuildList();
+    updateCounters();
+
+    // Har 6 sekundda yangi xabar
+    setInterval(() => {
+      const item = { ...INCOMING[incomingIdx % INCOMING.length], min: 0 };
+      incomingIdx++;
+      addPending(item);
+    }, 6000);
+  }
+
+  // ════════════════════════════════════════════════
+  // PUBLIC API — index.html dan chaqirish uchun
+  // Foydalanuvchi tahlil qilganda:
+  //   feedAddItem({ text, verdict, pct })
+  // ════════════════════════════════════════════════
+  function feedAddItem(item) {
+    const full = { ...item, min: 0 };
+    displayed.unshift(full);
+    counters[full.verdict] = (counters[full.verdict] || 0) + 1;
+    rebuildList();
+    updateCounters();
+    const el = document.querySelector('.feed-item');
+    if (el) {
+      el.classList.add('fresh');
+      setTimeout(() => el?.classList.remove('fresh'), 3000);
+    }
+  }
+
+  // ════════════════════════════════════════════════
+  // START
+  // ════════════════════════════════════════════════
+  applyTheme();
+  init();
+</script>
+</body>
+</html>

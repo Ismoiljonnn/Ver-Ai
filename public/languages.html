@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VerAi — Til tanlash</title>
+    <link rel="icon" type="image/png" href="VerAi.png">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Sans:wght@400;500&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root[data-theme="dark"] {
+            --bg: #0d0d0d;
+            --surface: #161616;
+            --surface2: #1f1f1f;
+            --border: #2a2a2a;
+            --text: #f0ede6;
+            --muted: #888;
+            --accent: #1C9AFD;
+            --accent-dark: #1482D9;
+            --card-bg: rgba(22, 22, 22, 0.88);
+            --card-selected: rgba(28, 154, 253, 0.08);
+        }
+
+        :root[data-theme="light"] {
+            --bg: #f2f2f0;
+            --surface: #ffffff;
+            --surface2: #ebebeb;
+            --border: #d8d8d8;
+            --text: #111111;
+            --muted: #777;
+            --accent: #1282d8;
+            --accent-dark: #0e6db8;
+            --card-bg: rgba(255, 255, 255, 0.92);
+            --card-selected: rgba(18, 130, 216, 0.07);
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.5rem;
+            transition: background 0.3s, color 0.3s;
+            overflow-x: hidden;
+        }
+
+        /* ── Orbs ── */
+        .bg-orbs {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: 0.3;
+            animation: float 14s ease-in-out infinite alternate;
+        }
+
+        .orb-1 {
+            width: 420px;
+            height: 420px;
+            background: var(--accent);
+            top: -12%;
+            left: -8%;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: #7c3aed;
+            bottom: -10%;
+            right: -8%;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 220px;
+            height: 220px;
+            background: #06b6d4;
+            top: 55%;
+            left: 65%;
+            animation-delay: -9s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(0, 0) scale(1)
+            }
+
+            100% {
+                transform: translate(35px, -28px) scale(1.12)
+            }
+        }
+
+        :root[data-theme="light"] .orb {
+            opacity: 0.12;
+        }
+
+        /* ── Theme toggle ── */
+        .theme-toggle {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            z-index: 100;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--surface2);
+            border-color: var(--accent);
+        }
+
+        .theme-toggle svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--text);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* ── Back button ── */
+        .back-btn {
+            position: fixed;
+            top: 18px;
+            left: 18px;
+            z-index: 100;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: var(--surface2);
+            border-color: var(--accent);
+        }
+
+        .back-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--text);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* ── Container ── */
+        .lang-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 560px;
+            animation: slideUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(28px) scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* ── Header ── */
+        .lang-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo-badge {
+            display: inline-block;
+            background: var(--accent);
+            color: #fff;
+            font-family: 'Syne', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 4px 14px;
+            border-radius: 99px;
+            margin-bottom: 1rem;
+        }
+
+        .lang-header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+        }
+
+        .lang-header h1 span {
+            color: var(--accent);
+        }
+
+        .lang-header p {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* ── Card wrapper ── */
+        .lang-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.6rem;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        @media (max-width: 480px) {
+            .lang-card {
+                padding: 1.2rem;
+                border-radius: 16px;
+            }
+        }
+
+        .card-label {
+            font-family: 'Syne', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 14px;
+        }
+
+        /* ── Language grid ── */
+        .lang-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        @media (max-width: 380px) {
+            .lang-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ── Language item ── */
+        .lang-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: var(--surface2);
+            border: 1.5px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .lang-item:hover {
+            border-color: var(--accent);
+            background: rgba(28, 154, 253, 0.05);
+        }
+
+        .lang-item.active {
+            border-color: var(--accent);
+            background: var(--card-selected);
+            box-shadow: 0 0 0 3px rgba(28, 154, 253, 0.12);
+        }
+
+        .lang-item.selecting {
+            animation: selectPulse 0.3s ease;
+        }
+
+        @keyframes selectPulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(0.97);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .lang-flag {
+            font-size: 28px;
+            line-height: 1;
+            flex-shrink: 0;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+        }
+
+        @media (max-width: 480px) {
+            .lang-flag {
+                font-size: 24px;
+            }
+        }
+
+        .lang-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .lang-name {
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.2;
+        }
+
+        .lang-native {
+            font-size: 11px;
+            color: var(--muted);
+            line-height: 1.2;
+        }
+
+        .lang-check {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .lang-item.active .lang-check {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .lang-check svg {
+            width: 11px;
+            height: 11px;
+            stroke: #fff;
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* ── Info row ── */
+        .lang-info-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 14px;
+            padding: 10px 14px;
+            background: rgba(28, 154, 253, 0.07);
+            border: 1px solid rgba(28, 154, 253, 0.15);
+            border-radius: 10px;
+        }
+
+        .lang-info-row svg {
+            width: 14px;
+            height: 14px;
+            stroke: var(--accent);
+            fill: none;
+            flex-shrink: 0;
+        }
+
+        .lang-info-row span {
+            font-size: 11.5px;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+
+        .lang-info-row span b {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* ── Footer ── */
+        .lang-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--muted);
+            font-size: 12px;
+            opacity: 0.45;
+        }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 18px;
+            font-family: 'Syne', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.25s, transform 0.25s;
+            z-index: 999;
+            pointer-events: none;
+            white-space: nowrap;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <a class="back-btn" href="/" id="backBtn" aria-label="Orqaga">
+        <svg viewBox="0 0 24 24">
+            <polyline points="15 18 9 12 15 6" />
+        </svg>
+    </a>
+
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Tema">
+        <svg id="themeIcon" viewBox="0 0 24 24">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+    </button>
+
+    <div class="lang-container">
+        <div class="lang-header">
+            <div class="logo-badge">VerAi</div>
+            <h1>Tilni <span>tanlang</span></h1>
+            <p id="headerSub">AI javoblari va interfeys shu tilda ko'rsatiladi</p>
+        </div>
+
+        <div class="lang-card">
+            <p class="card-label" id="cardLabel">Mavjud tillar</p>
+
+            <div class="lang-grid" id="langGrid"></div>
+
+            <div class="lang-info-row">
+                <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <span id="infoText">Til tanlovi <b>saqlanadi</b> — keyingi kirishda ham shu til ishlatiladi</span>
+            </div>
+        </div>
+
+        <p class="lang-footer">VerAi&mdash;Since 2026</p>
+    </div>
+
+    <div class="toast" id="toast">
+        <span class="toast-dot"></span>
+        <span id="toastText">Til saqlandi</span>
+    </div>
+
+    <script>
+        // ── LANGUAGE DEFINITIONS ─────────────────────────────────────
+        // Add new languages here easily
+        const LANGUAGES = [
+            {
+                code: 'uz',
+                flag: '🇺🇿',
+                name: "O'zbek tili",
+                native: "O'zbek",
+                toastMsg: "Til saqlandi — O'zbek",
+                headerSub: "AI javoblari va interfeys shu tilda ko'rsatiladi",
+                cardLabel: "Mavjud tillar",
+                infoText: "Til tanlovi <b>saqlanadi</b> — keyingi kirishda ham shu til ishlatiladi"
+            },
+            {
+                code: 'en',
+                flag: '🇬🇧',
+                name: 'English',
+                native: 'English',
+                toastMsg: 'Language saved — English',
+                headerSub: 'AI responses and interface will be shown in this language',
+                cardLabel: 'Available languages',
+                infoText: 'Language choice is <b>saved</b> — will be used on next visit too'
+            },
+            {
+                code: 'ru',
+                flag: '🇷🇺',
+                name: 'Rus tili',
+                native: 'Русский',
+                toastMsg: 'Язык сохранён — Русский',
+                headerSub: 'Ответы ИИ и интерфейс будут на этом языке',
+                cardLabel: 'Доступные языки',
+                infoText: 'Выбор языка <b>сохраняется</b> — будет использоваться при следующем входе'
+            },
+            {
+                code: 'ja',
+                flag: '🇯🇵',
+                name: 'Yapon tili',
+                native: '日本語',
+                toastMsg: '言語を保存しました — 日本語',
+                headerSub: 'AIの回答とインターフェースはこの言語で表示されます',
+                cardLabel: '利用可能な言語',
+                infoText: '言語の選択は<b>保存されます</b> — 次回訪問時も使用されます'
+            },
+            {
+                code: 'zh',
+                flag: '🇨🇳',
+                name: 'Xitoy tili',
+                native: '中文',
+                toastMsg: '语言已保存 — 中文',
+                headerSub: 'AI回复和界面将以此语言显示',
+                cardLabel: '可用语言',
+                infoText: '语言选择已<b>保存</b> — 下次访问时也会使用'
+            },
+        ];
+
+        // ── STATE ────────────────────────────────────────────────────
+        let currentLang = localStorage.getItem('verai_lang') || 'uz';
+        let isDark = localStorage.getItem('verai_theme') !== 'light';
+
+        // ── THEME ────────────────────────────────────────────────────
+        function applyTheme() {
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            const icon = document.getElementById('themeIcon');
+            icon.innerHTML = isDark
+                ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
+                : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+        }
+        function toggleTheme() {
+            isDark = !isDark;
+            localStorage.setItem('verai_theme', isDark ? 'dark' : 'light');
+            applyTheme();
+        }
+
+        // ── RENDER GRID ──────────────────────────────────────────────
+        function renderGrid() {
+            const grid = document.getElementById('langGrid');
+            grid.innerHTML = LANGUAGES.map(lang => `
+      <div class="lang-item${lang.code === currentLang ? ' active' : ''}"
+           id="item-${lang.code}"
+           onclick="selectLang('${lang.code}')">
+        <span class="lang-flag">${lang.flag}</span>
+        <div class="lang-info">
+          <span class="lang-name">${lang.native}</span>
+          <span class="lang-native">${lang.name}</span>
+        </div>
+        <div class="lang-check">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+      </div>
+    `).join('');
+
+            // Update page text based on current lang
+            updatePageText();
+        }
+
+        function updatePageText() {
+            const lang = LANGUAGES.find(l => l.code === currentLang) || LANGUAGES[0];
+            document.getElementById('headerSub').textContent = lang.headerSub;
+            document.getElementById('cardLabel').textContent = lang.cardLabel;
+            document.getElementById('infoText').innerHTML = lang.infoText;
+        }
+
+        // ── SELECT LANGUAGE ──────────────────────────────────────────
+        function selectLang(code) {
+            if (code === currentLang) return;
+
+            // Animate the clicked item
+            const item = document.getElementById('item-' + code);
+            item.classList.add('selecting');
+            setTimeout(() => item.classList.remove('selecting'), 300);
+
+            // Remove active from old
+            const old = document.querySelector('.lang-item.active');
+            if (old) old.classList.remove('active');
+
+            // Set new active
+            item.classList.add('active');
+            currentLang = code;
+
+            // Save to localStorage
+            localStorage.setItem('verai_lang', code);
+
+            // Update page text
+            updatePageText();
+
+            // Show toast
+            const lang = LANGUAGES.find(l => l.code === code);
+            showToast(lang.toastMsg);
+
+            // Redirect after brief delay
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 900);
+        }
+
+        // ── TOAST ────────────────────────────────────────────────────
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastText').textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // ── INIT ─────────────────────────────────────────────────────
+        applyTheme();
+        renderGrid();
+    </script>
+</body>
+
+</html>
