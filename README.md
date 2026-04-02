@@ -31,7 +31,7 @@ GROQ_API_KEY = 'gsk_your_api_key_here'
 
 ## 🚀 Ishga tushirish
 
-Kutubxonalarni yuklang va serverni yoqing:
+Kutubxonalarni yuklang va serverni yoqing: 
 ```bash
 pip install -r requirements.txt
 python app.py
