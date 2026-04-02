@@ -1,6 +1,6 @@
 # 🚀 VerAi: The Global Truth Guardian
 
-**VerAi** — bu internetdagi ma'lumotlar immuniteti. AI texnologiyalari orqali feyk xabarlarni aniqlash va haqiqatni himoya qilish uchun yaratilgan ochiq manbali tizim.
+**VerAi** — bu internetdagi ma'lumotlar immuniteti. AI texnologiyalari orqali feyk xabarlarni aniqlash va haqiqatni himoya qilish uchun yaratilgan ochiq manbali Ai agent.
 
 
 
